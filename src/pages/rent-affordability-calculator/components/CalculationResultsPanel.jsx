@@ -1,13 +1,54 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import Icon from '../../../components/AppIcon';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 const CalculationResultsPanel = ({
   monthlyIncome,
   nonRentExpenses,
   rentPercentage
 }) => {
+  const panelRef = useRef(null);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+
   const formatCurrency = (value) => {
     return new Intl.NumberFormat('en-US')?.format(value);
+  };
+
+  const handleDownloadPdf = async () => {
+    if (!panelRef.current) return;
+    
+    setIsGeneratingPdf(true);
+    try {
+      const canvas = await html2canvas(panelRef.current, {
+        scale: 2, // Higher quality
+        backgroundColor: '#ffffff',
+        logging: false,
+        useCORS: true
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+
+      const imgWidth = 210; // A4 width in mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
+      pdf.setFontSize(16);
+      pdf.text('Rent Affordability Report', 105, 15, { align: 'center' });
+      pdf.setFontSize(10);
+      pdf.text(`Generated on ${new Date().toLocaleDateString()}`, 105, 22, { align: 'center' });
+      
+      pdf.addImage(imgData, 'PNG', 0, 30, imgWidth, imgHeight);
+      pdf.save('rent-with-clara-report.pdf');
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+    } finally {
+      setIsGeneratingPdf(false);
+    }
   };
 
   const calculateResults = () => {
@@ -84,7 +125,7 @@ const CalculationResultsPanel = ({
   };
 
   return (
-    <div className="clara-card">
+    <div className="clara-card" ref={panelRef}>
       <div className="flex items-center space-x-3 mb-6">
         <div className="flex items-center justify-center w-10 h-10 bg-primary/10 rounded-lg">
           <Icon name="Calculator" size={20} color="#E16733" />
@@ -189,6 +230,24 @@ const CalculationResultsPanel = ({
           </div>
         )}
       </div>
+      
+      {/* PDF Download Button */}
+      {monthlyIncome && (
+        <div className="mt-6 pt-4 border-t border-border flex justify-center">
+          <button
+            onClick={handleDownloadPdf}
+            disabled={isGeneratingPdf}
+            className="flex items-center space-x-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+          >
+            {isGeneratingPdf ? (
+              <span className="animate-spin mr-2">⏳</span>
+            ) : (
+              <Icon name="Download" size={16} color="#E16733" />
+            )}
+            <span>{isGeneratingPdf ? 'Generating Report...' : 'Download My Report'}</span>
+          </button>
+        </div>
+      )}
     </div>
   );
 };
