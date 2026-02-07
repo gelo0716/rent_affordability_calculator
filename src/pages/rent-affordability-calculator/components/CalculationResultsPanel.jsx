@@ -2,6 +2,9 @@ import React, { useRef, useState } from 'react';
 import Icon from '../../../components/AppIcon';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import UpfrontCostsEstimation from './UpfrontCostsEstimation';
+import AdvancedInsights from './AdvancedInsights';
+import EmailCaptureModal from './EmailCaptureModal';
 
 const CalculationResultsPanel = ({
   monthlyIncome,
@@ -10,6 +13,8 @@ const CalculationResultsPanel = ({
 }) => {
   const panelRef = useRef(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [isProUnlocked, setIsProUnlocked] = useState(false);
+  const [showEmailModal, setShowEmailModal] = useState(false);
 
   const formatCurrency = (value) => {
     return new Intl.NumberFormat('en-US')?.format(value);
@@ -228,9 +233,39 @@ const CalculationResultsPanel = ({
               </div>
             </div>
           </div>
-        )}
+      )}
       </div>
-      
+
+      <UpfrontCostsEstimation monthlyRent={results.maxRent} />
+
+      {/* Advanced Insights Section (Locked/Unlocked) */}
+      {monthlyIncome && (
+        <>
+          {!isProUnlocked ? (
+            <div className="clara-card bg-gradient-to-br from-primary/5 to-primary/10 border-2 border-primary/20 mt-6 relative overflow-hidden group hover:border-primary/40 transition-all cursor-pointer"
+                 onClick={() => setShowEmailModal(true)}>
+              
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center shadow-lg">
+                    <Icon name="Lock" size={20} />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-foreground">Unlock Your Approval Score</h3>
+                    <p className="text-xs text-muted-foreground">See how landlords view your application</p>
+                  </div>
+                </div>
+                <div className="bg-primary text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-sm group-hover:scale-105 transition-transform">
+                  FREE
+                </div>
+              </div>
+            </div>
+          ) : (
+            <AdvancedInsights results={results} monthlyIncome={monthlyIncome} />
+          )}
+        </>
+      )}
+
       {/* PDF Download Button */}
       {monthlyIncome && (
         <div className="mt-6 pt-4 border-t border-border flex justify-center">
@@ -248,6 +283,17 @@ const CalculationResultsPanel = ({
           </button>
         </div>
       )}
+
+      <EmailCaptureModal 
+        isOpen={showEmailModal}
+        onClose={() => setShowEmailModal(false)}
+        onSuccess={() => setIsProUnlocked(true)}
+        sessionData={{
+          monthly_income: parseInt(monthlyIncome || 0),
+          non_rent_expenses: parseInt(nonRentExpenses || 0),
+          rent_percentage: rentPercentage
+        }}
+      />
     </div>
   );
 };
