@@ -1,14 +1,17 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Icon from '../../../components/AppIcon';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import UpfrontCostsEstimation from './UpfrontCostsEstimation';
 import AdvancedInsights from './AdvancedInsights';
 import EmailCaptureModal from './EmailCaptureModal';
+import { emailService } from '../../../services/emailService';
 
 const CalculationResultsPanel = ({
   monthlyIncome,
   nonRentExpenses,
+  monthlyDebt,
   rentPercentage
 }) => {
   const panelRef = useRef(null);
@@ -16,13 +19,23 @@ const CalculationResultsPanel = ({
   const [isProUnlocked, setIsProUnlocked] = useState(false);
   const [showEmailModal, setShowEmailModal] = useState(false);
 
+  useEffect(() => {
+    try {
+      const storedEmail = localStorage.getItem('rentCalculator_userEmail');
+      if (storedEmail && emailService?.validateEmail(storedEmail)) {
+        setIsProUnlocked(true);
+      }
+    } catch {
+    }
+  }, []);
+
   const formatCurrency = (value) => {
     return new Intl.NumberFormat('en-US')?.format(value);
   };
 
   const handleDownloadPdf = async () => {
     if (!panelRef.current) return;
-    
+
     setIsGeneratingPdf(true);
     try {
       const canvas = await html2canvas(panelRef.current, {
@@ -41,12 +54,12 @@ const CalculationResultsPanel = ({
 
       const imgWidth = 210; // A4 width in mm
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      
+
       pdf.setFontSize(16);
       pdf.text('Rent Affordability Report', 105, 15, { align: 'center' });
       pdf.setFontSize(10);
       pdf.text(`Generated on ${new Date().toLocaleDateString()}`, 105, 22, { align: 'center' });
-      
+
       pdf.addImage(imgData, 'PNG', 0, 30, imgWidth, imgHeight);
       pdf.save('rent-with-clara-report.pdf');
     } catch (error) {
@@ -57,7 +70,7 @@ const CalculationResultsPanel = ({
   };
 
   const calculateResults = () => {
-    if (!monthlyIncome || !nonRentExpenses) {
+    if (!monthlyIncome) {
       return {
         maxRent: 0,
         disposableIncome: 0,
@@ -66,22 +79,32 @@ const CalculationResultsPanel = ({
       };
     }
 
-    const income = parseInt(monthlyIncome);
-    const expenses = parseInt(nonRentExpenses);
+    const income = parseInt(monthlyIncome) || 0;
+    const expenses = parseInt(nonRentExpenses) || 0;
+    const debt = parseInt(monthlyDebt) || 0;
+
     const maxRent = Math.round(income * rentPercentage / 100);
-    const remainingAfterRent = income - maxRent;
-    const disposableIncome = remainingAfterRent - expenses;
+    const totalCommitted = maxRent + expenses + debt;
+    const disposableIncome = income - totalCommitted;
     const rentToIncomeRatio = rentPercentage;
 
     return {
       maxRent,
       disposableIncome,
       rentToIncomeRatio,
-      remainingAfterRent
+      totalCommitted
     };
   };
 
   const results = calculateResults();
+
+  // Chart Data Preparation
+  const chartData = [
+    { name: 'Rent', value: results.maxRent, color: '#E16733' },
+    { name: 'Debt', value: parseInt(monthlyDebt) || 0, color: '#DC2626' },
+    { name: 'Expenses', value: parseInt(nonRentExpenses) || 0, color: '#FAD75E' },
+    { name: 'Remaining', value: Math.max(0, results.disposableIncome), color: '#2CB853' }
+  ].filter(item => item.value > 0);
 
   // Clara-friendly status messages
   const getStatusMessage = (value, type) => {
@@ -140,18 +163,18 @@ const CalculationResultsPanel = ({
           <p className="text-sm text-muted-foreground">Here's what we calculated for you</p>
         </div>
       </div>
-      
+
       <div className="space-y-4">
-        {/* Maximum Recommended Rent - Hero Number, Updated text */}
+        {/* Maximum Recommended Rent - Hero Number */}
         <div className="clara-card border-2 border-border">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center space-x-2">
               <Icon name="Home" size={20} color="#E16733" />
-              <span className="text-sm font-medium text-foreground">This is what you can afford</span>
+              <span className="text-sm font-medium text-foreground">Max Recommended Rent</span>
             </div>
-            <Icon name={getStatusIcon(results?.maxRent, 'rent')} 
-                  size={16} 
-                  color={getStatusIconColor(results?.maxRent, 'rent')} />
+            <Icon name={getStatusIcon(results?.maxRent, 'rent')}
+              size={16}
+              color={getStatusIconColor(results?.maxRent, 'rent')} />
           </div>
           <div className="clara-hero-number mb-2">
             ${formatCurrency(results?.maxRent)}
@@ -164,16 +187,16 @@ const CalculationResultsPanel = ({
           </div>
         </div>
 
-        {/* Disposable Income - Hero Number, No Background Color */}
+        {/* Disposable Income - Hero Number */}
         <div className="clara-card border-2 border-border">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center space-x-2">
               <Icon name="Wallet" size={20} color="#E16733" />
-              <span className="text-sm font-medium text-foreground">Money Left Over</span>
+              <span className="text-sm font-medium text-foreground">Leftover for Savings/Fun</span>
             </div>
-            <Icon name={getStatusIcon(results?.disposableIncome, 'disposable')} 
-                  size={16} 
-                  color={getStatusIconColor(results?.disposableIncome, 'disposable')} />
+            <Icon name={getStatusIcon(results?.disposableIncome, 'disposable')}
+              size={16}
+              color={getStatusIconColor(results?.disposableIncome, 'disposable')} />
           </div>
           <div className={`clara-hero-number mb-2 ${results?.disposableIncome >= 0 ? 'text-success' : 'text-error'}`}>
             ${formatCurrency(Math.abs(results?.disposableIncome))}
@@ -183,57 +206,52 @@ const CalculationResultsPanel = ({
             {results?.disposableIncome >= 0 ? getStatusMessage(results?.disposableIncome, 'disposable') : "Time to adjust something! 🔧"}
           </div>
           <div className="text-xs text-muted-foreground">
-            {results?.disposableIncome >= 0 ? 'For fun stuff, savings, and surprises' : 'Consider reducing expenses or increasing income'}
+            {results?.disposableIncome >= 0 ? 'Great job budgeting!' : 'Consider reducing expenses or increasing income'}
           </div>
         </div>
 
-        {/* Rent Percentage Indicator - Clean White Card */}
-        <div className="clara-card">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center space-x-2">
-              <Icon name="Percent" size={18} color="#E16733" />
-              <span className="text-sm font-medium text-foreground">Rent vs Income</span>
-            </div>
-          </div>
-          <div className="text-2xl font-bold text-foreground mb-1">
-            {results?.rentToIncomeRatio}%
-          </div>
-          <div className="text-xs text-muted-foreground">
-            Financial experts suggest staying at or below 30%
-          </div>
-        </div>
-
-        {/* Quick Budget Summary - Clean White Card */}
-        {monthlyIncome && nonRentExpenses && (
+        {/* Visual Budget Breakdown - Pie Chart */}
+        {monthlyIncome && (
           <div className="clara-card">
-            <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center">
+            <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center">
               <Icon name="PieChart" size={16} color="#E16733" className="mr-2" />
-              Your Monthly Breakdown
+              Where Your Money Goes
             </h3>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Total Income:</span>
-                <span className="font-semibold text-foreground">${formatCurrency(parseInt(monthlyIncome))}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Proposed Rent:</span>
-                <span className="font-semibold text-foreground">${formatCurrency(results?.maxRent)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Other Expenses:</span>
-                <span className="font-semibold text-foreground">${formatCurrency(parseInt(nonRentExpenses))}</span>
-              </div>
-              <div className="border-t border-border pt-2 mt-3">
-                <div className="flex justify-between">
-                  <span className="text-foreground font-semibold">What's Left:</span>
-                  <span className={`font-bold ${results?.disposableIncome >= 0 ? 'text-success' : 'text-error'}`}>
-                    ${formatCurrency(Math.abs(results?.disposableIncome))}
-                  </span>
-                </div>
+
+            <div className="h-[200px] w-full mb-4">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={chartData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {chartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    formatter={(value) => `$${formatCurrency(value)}`}
+                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                  />
+                  <Legend verticalAlign="bottom" height={36} iconType="circle" />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="space-y-2 text-sm border-t border-border pt-4">
+              {/* Detailed text breakdown if needed, or rely on Legend + Tooltip */}
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Total Income</span>
+                <span className="font-semibold">${formatCurrency(parseInt(monthlyIncome))}</span>
               </div>
             </div>
           </div>
-      )}
+        )}
       </div>
 
       <UpfrontCostsEstimation monthlyRent={results.maxRent} />
@@ -243,8 +261,8 @@ const CalculationResultsPanel = ({
         <>
           {!isProUnlocked ? (
             <div className="clara-card bg-gradient-to-br from-primary/5 to-primary/10 border-2 border-primary/20 mt-6 relative overflow-hidden group hover:border-primary/40 transition-all cursor-pointer"
-                 onClick={() => setShowEmailModal(true)}>
-              
+              onClick={() => setShowEmailModal(true)}>
+
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center shadow-lg">
@@ -284,13 +302,14 @@ const CalculationResultsPanel = ({
         </div>
       )}
 
-      <EmailCaptureModal 
+      <EmailCaptureModal
         isOpen={showEmailModal}
         onClose={() => setShowEmailModal(false)}
         onSuccess={() => setIsProUnlocked(true)}
         sessionData={{
           monthly_income: parseInt(monthlyIncome || 0),
           non_rent_expenses: parseInt(nonRentExpenses || 0),
+          monthly_debt: parseInt(monthlyDebt || 0),
           rent_percentage: rentPercentage
         }}
       />

@@ -6,7 +6,9 @@ const IncomeInputSection = ({
   monthlyIncome,
   setMonthlyIncome,
   nonRentExpenses,
-  setNonRentExpenses
+  setNonRentExpenses,
+  monthlyDebt,
+  setMonthlyDebt
 }) => {
   const handleIncomeChange = (e) => {
     const value = e?.target?.value?.replace(/[^0-9]/g, '');
@@ -18,10 +20,18 @@ const IncomeInputSection = ({
     setNonRentExpenses(value);
   };
 
+  const handleDebtChange = (e) => {
+    const value = e?.target?.value?.replace(/[^0-9]/g, '');
+    setMonthlyDebt(value);
+  };
+
   const formatCurrency = (value) => {
     if (!value) return '';
     return new Intl.NumberFormat('en-US')?.format(value);
   };
+
+  const totalExpenses = (parseInt(nonRentExpenses) || 0) + (parseInt(monthlyDebt) || 0);
+  const remainingIncome = (parseInt(monthlyIncome) || 0) - totalExpenses;
 
   return (
     <div className="bg-card rounded-lg border border-border p-6 shadow-soft">
@@ -54,33 +64,38 @@ const IncomeInputSection = ({
 
         <div>
           <Input
-            label="Non-Rent Monthly Expenses"
+            label="Monthly Debt Payments"
             type="text"
-            placeholder="2,000"
-            value={formatCurrency(nonRentExpenses)}
-            onChange={handleExpensesChange}
-            description="All other monthly expenses excluding rent"
+            placeholder="500"
+            value={formatCurrency(monthlyDebt)}
+            onChange={handleDebtChange}
+            description="Credit cards, student loans, car payments, etc."
             className="text-lg" />
-
-          <div className="flex items-center mt-2 text-sm text-muted-foreground">
-            <Icon name="Info" size={16} color="#ffb470" className="mr-1" />
-            <span>Food, transportation, utilities, insurance, debt payments, etc.</span>
-          </div>
         </div>
 
-        {monthlyIncome && nonRentExpenses &&
-        <div className="bg-secondary/50 rounded-lg p-4 border border-secondary">
+        <div>
+          <Input
+            label="Other Monthly Expenses"
+            type="text"
+            placeholder="1,500"
+            value={formatCurrency(nonRentExpenses)}
+            onChange={handleExpensesChange}
+            description="Food, utilities, transportation, subscriptions, etc."
+            className="text-lg" />
+        </div>
+
+        {monthlyIncome && (nonRentExpenses || monthlyDebt) &&
+          <div className="bg-secondary/50 rounded-lg p-4 border border-secondary">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium text-secondary-foreground">Available for Rent & Savings:</span>
               <span className="text-lg font-semibold text-primary">
-                ${formatCurrency(Math.max(0, parseInt(monthlyIncome) - parseInt(nonRentExpenses)))}
+                ${formatCurrency(Math.max(0, remainingIncome))}
               </span>
             </div>
           </div>
         }
       </div>
     </div>);
-
 };
 
 export default IncomeInputSection;

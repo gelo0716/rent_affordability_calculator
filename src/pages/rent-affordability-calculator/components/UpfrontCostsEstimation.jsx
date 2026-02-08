@@ -1,19 +1,40 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Icon from '../../../components/AppIcon';
+import Input from '../../../components/ui/Input';
 
 const UpfrontCostsEstimation = ({ monthlyRent }) => {
-  if (!monthlyRent) return null;
+  const rent = Number(monthlyRent) || 0;
+
+  const [costs, setCosts] = useState(() => ({
+    firstMonth: rent,
+    securityDeposit: rent,
+    applicationFees: 150,
+    movingEssentials: 400
+  }));
+
+  // Update rent-dependent costs when rent changes
+  useEffect(() => {
+    if (!rent) return;
+    setCosts(prev => ({
+      ...prev,
+      firstMonth: rent,
+      securityDeposit: rent
+    }));
+  }, [rent]);
+
+  const handleCostChange = (key, value) => {
+    const numericValue = parseInt(value?.replace(/[^0-9]/g, '') || 0);
+    setCosts(prev => ({
+      ...prev,
+      [key]: numericValue
+    }));
+  };
 
   const formatCurrency = (value) => {
     return new Intl.NumberFormat('en-US').format(value);
   };
 
-  const costs = {
-    firstMonth: monthlyRent,
-    securityDeposit: monthlyRent,
-    applicationFees: 150, // Average for app + admin fees
-    movingEssentials: 400 // Truck rental, boxes, supplies
-  };
+  if (!rent) return null;
 
   const totalUpfront = Object.values(costs).reduce((a, b) => a + b, 0);
 
@@ -25,42 +46,51 @@ const UpfrontCostsEstimation = ({ monthlyRent }) => {
         </div>
         <div>
           <h2 className="text-lg font-semibold text-foreground">Move-In Cash Needed 🚚</h2>
-          <p className="text-sm text-muted-foreground">Estimated cash to save before day 1</p>
+          <p className="text-sm text-muted-foreground">Estimated cash to save before day 1 (Editable)</p>
         </div>
       </div>
 
       <div className="bg-secondary/20 rounded-xl p-5 border border-secondary/50">
         {/* Total Hero Number */}
-        <div className="flex justify-between items-end mb-4">
-            <div>
-                <div className="text-sm text-muted-foreground mb-1">Estimated Total</div>
-                <div className="text-2xl font-bold text-primary">
-                    ${formatCurrency(totalUpfront)}
-                </div>
+        <div className="flex justify-between items-end mb-6">
+          <div>
+            <div className="text-sm text-muted-foreground mb-1">Estimated Total</div>
+            <div className="text-2xl font-bold text-primary">
+              ${formatCurrency(totalUpfront)}
             </div>
-            {/* Optional: Add a small badge or visual here */}
+          </div>
         </div>
 
-        {/* Breakdown List */}
-        <div className="space-y-2">
-          <div className="flex justify-between items-center text-sm">
-            <span className="text-muted-foreground">First Month's Rent</span>
-            <span className="font-medium text-foreground">${formatCurrency(costs.firstMonth)}</span>
+        {/* Breakdown List - Editable */}
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4 items-center">
+            <label className="text-sm text-muted-foreground">First Month's Rent</label>
+            <div className="text-right font-medium text-foreground">${formatCurrency(costs.firstMonth)}</div>
           </div>
 
-          <div className="flex justify-between items-center text-sm">
-            <span className="text-muted-foreground">Security Deposit</span>
-            <span className="font-medium text-foreground">${formatCurrency(costs.securityDeposit)}</span>
+          <div className="grid grid-cols-2 gap-4 items-center">
+            <label className="text-sm text-muted-foreground">Security Deposit</label>
+            <div className="text-right font-medium text-foreground">${formatCurrency(costs.securityDeposit)}</div>
           </div>
 
-          <div className="flex justify-between items-center text-sm">
-            <span className="text-muted-foreground">App & Admin Fees</span>
-            <span className="font-medium text-foreground">${formatCurrency(costs.applicationFees)}</span>
+          <div className="grid grid-cols-2 gap-4 items-center">
+            <label className="text-sm text-muted-foreground">App & Admin Fees</label>
+            <Input
+              type="text"
+              value={formatCurrency(costs.applicationFees)}
+              onChange={(e) => handleCostChange('applicationFees', e.target.value)}
+              className="text-right h-8 py-1"
+            />
           </div>
 
-          <div className="flex justify-between items-center text-sm">
-            <span className="text-muted-foreground">Moving Crew/Truck</span>
-            <span className="font-medium text-foreground">${formatCurrency(costs.movingEssentials)}</span>
+          <div className="grid grid-cols-2 gap-4 items-center">
+            <label className="text-sm text-muted-foreground">Moving Crew/Truck</label>
+            <Input
+              type="text"
+              value={formatCurrency(costs.movingEssentials)}
+              onChange={(e) => handleCostChange('movingEssentials', e.target.value)}
+              className="text-right h-8 py-1"
+            />
           </div>
         </div>
       </div>
@@ -68,7 +98,7 @@ const UpfrontCostsEstimation = ({ monthlyRent }) => {
       <div className="mt-3 flex items-start space-x-2 text-xs text-muted-foreground">
         <Icon name="Info" size={14} className="mt-0.5 shrink-0" color="#E16733" />
         <span>
-            Most landlords require a cashier's check for the rent and deposit upon lease signing.
+          Customizable estimates. Most landlords require a cashier's check for the rent and deposit.
         </span>
       </div>
     </div>

@@ -35,7 +35,11 @@ const EmailCaptureModal = ({ isOpen, onClose, onSuccess, sessionData }) => {
       }
 
       // Success!
-      onSuccess();
+      try {
+        localStorage.setItem('rentCalculator_userEmail', email?.trim()?.toLowerCase());
+      } catch {
+      }
+      onSuccess?.(email);
       onClose();
     } catch (err) {
       setError(err.message || 'Something went wrong. Please try again.');
