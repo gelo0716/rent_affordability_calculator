@@ -153,6 +153,7 @@ const CalculationResultsPanel = ({
   };
 
   return (
+    <>
     <div className="clara-card" ref={panelRef}>
       <div className="flex items-center space-x-3 mb-6">
         <div className="flex items-center justify-center w-10 h-10 bg-primary/10 rounded-lg">
@@ -286,7 +287,7 @@ const CalculationResultsPanel = ({
 
       {/* PDF Download Button */}
       {monthlyIncome && (
-        <div className="mt-6 pt-4 border-t border-border flex justify-center">
+        <div className="mt-6 pt-4 border-t border-border flex justify-center" data-html2canvas-ignore="true">
           <button
             onClick={handleDownloadPdf}
             disabled={isGeneratingPdf}
@@ -301,19 +302,20 @@ const CalculationResultsPanel = ({
           </button>
         </div>
       )}
-
-      <EmailCaptureModal
-        isOpen={showEmailModal}
-        onClose={() => setShowEmailModal(false)}
-        onSuccess={() => setIsProUnlocked(true)}
-        sessionData={{
-          monthly_income: parseInt(monthlyIncome || 0),
-          non_rent_expenses: parseInt(nonRentExpenses || 0),
-          monthly_debt: parseInt(monthlyDebt || 0),
-          rent_percentage: rentPercentage
-        }}
-      />
     </div>
+
+    <EmailCaptureModal
+      isOpen={showEmailModal}
+      onClose={() => setShowEmailModal(false)}
+      onSuccess={handleEmailSuccess}
+      sessionData={{
+        monthly_income: parseInt(monthlyIncome || 0),
+        non_rent_expenses: parseInt(nonRentExpenses || 0),
+        monthly_debt: parseInt(monthlyDebt || 0),
+        rent_percentage: rentPercentage
+      }}
+    />
+    </>
   );
 };
 
