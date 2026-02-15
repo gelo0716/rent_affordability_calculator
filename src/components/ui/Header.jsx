@@ -3,7 +3,7 @@ import Icon from '../AppIcon';
 
 const Header = ({ className = '' }) => {
   const handleShare = async () => {
-    const siteUrl = import.meta.env.VITE_SITE_URL || window.location.origin;
+    const siteUrl = typeof window !== 'undefined' ? window.location.origin : 'https://rent-affordability-calculator.rentwithclara.com';
     const shareData = {
       title: 'Rent Affordability Calculator | How Much Rent Can I Afford?',
       text: 'Find out how much rent you can afford with this simple calculator. Get your results in seconds!',

@@ -65,7 +65,7 @@ const RentAffordabilityCalculator = () => {
   };
 
   // Schema.org structured data
-  const siteUrl = import.meta.env.VITE_SITE_URL || window.location.origin;
+  const siteUrl = typeof window !== 'undefined' ? window.location.origin : 'https://rent-affordability-calculator.rentwithclara.com';
   
   const schemaData = {
     "@context": "https://schema.org",
