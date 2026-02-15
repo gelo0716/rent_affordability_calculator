@@ -65,15 +65,17 @@ const RentAffordabilityCalculator = () => {
   };
 
   // Schema.org structured data
+  const siteUrl = import.meta.env.VITE_SITE_URL || window.location.origin;
+  
   const schemaData = {
     "@context": "https://schema.org",
     "@graph": [
       {
         "@type": "Article",
-        "@id": "https://rent-affordability-calculator.rentwithclara.com/#article",
+        "@id": `${siteUrl}/#article`,
         "headline": "How Much Rent Can I Afford?",
         "description": "Complete guide to calculating affordable rent using the 30% rule, 50/30/20 budget split, and understanding hidden rental costs. Includes interactive rent calculator.",
-        "image": "https://rent-affordability-calculator.rentwithclara.com/og-image.jpg",
+        "image": `${siteUrl}/og-image.jpg`,
         "author": {
           "@type": "Organization",
           "name": "Rent with Clara",
@@ -91,7 +93,7 @@ const RentAffordabilityCalculator = () => {
         "dateModified": "2025-10-25",
         "mainEntityOfPage": {
           "@type": "WebPage",
-          "@id": "https://rent-affordability-calculator.rentwithclara.com/"
+          "@id": `${siteUrl}/`
         },
         "articleSection": "Personal Finance",
         "keywords": "rent affordability, rent calculator, 30% rule, rental budget, how much rent can I afford, rent to income ratio",
@@ -112,7 +114,7 @@ const RentAffordabilityCalculator = () => {
       },
       {
         "@type": "FAQPage",
-        "@id": "https://rent-affordability-calculator.rentwithclara.com/#faq",
+        "@id": `${siteUrl}/#faq`,
         "mainEntity": [
           {
             "@type": "Question",
@@ -177,15 +179,16 @@ const RentAffordabilityCalculator = () => {
               "@type": "Answer",
               "text": "Get a roommate, move farther out, or increase income with side work. High-cost cities require creative solutions."
             }
-          }]
+          }
+        ]
 
       },
       {
         "@type": "WebApplication",
-        "@id": "https://rent-affordability-calculator.rentwithclara.com/#calculator",
+        "@id": `${siteUrl}/#calculator`,
         "name": "Rent Affordability Calculator",
         "description": "Free online calculator to determine how much rent you can afford based on your income and expenses using the 30% rule and 50/30/20 budget framework.",
-        "url": "https://rent-affordability-calculator.rentwithclara.com/",
+        "url": `${siteUrl}/`,
         "applicationCategory": "FinanceApplication",
         "operatingSystem": "Any",
         "offers": {
@@ -207,7 +210,7 @@ const RentAffordabilityCalculator = () => {
       },
       {
         "@type": "HowTo",
-        "@id": "https://rent-affordability-calculator.rentwithclara.com/#howto",
+        "@id": `${siteUrl}/#howto`,
         "name": "How to Calculate Affordable Rent",
         "description": "Step-by-step guide to determining how much rent you can afford using proven budgeting methods.",
         "step": [
@@ -257,7 +260,7 @@ const RentAffordabilityCalculator = () => {
       },
       {
         "@type": "BreadcrumbList",
-        "@id": "https://rent-affordability-calculator.rentwithclara.com/#breadcrumb",
+        "@id": `${siteUrl}/#breadcrumb`,
         "itemListElement": [
           {
             "@type": "ListItem",
@@ -269,14 +272,14 @@ const RentAffordabilityCalculator = () => {
             "@type": "ListItem",
             "position": 2,
             "name": "Rent Calculator",
-            "item": "https://rent-affordability-calculator.rentwithclara.com/"
+            "item": `${siteUrl}/`
           }]
 
       },
       {
         "@type": "WebPage",
-        "@id": "https://rent-affordability-calculator.rentwithclara.com/#webpage",
-        "url": "https://rent-affordability-calculator.rentwithclara.com/",
+        "@id": `${siteUrl}/#webpage`,
+        "url": `${siteUrl}/`,
         "name": "Rent Affordability Calculator - How Much Rent Can I Afford? | Rent with Clara",
         "description": "Calculate how much rent you can afford with our free calculator. Learn the 30% rule, budget strategies, and hidden costs to find your perfect rental.",
         "isPartOf": {
@@ -286,10 +289,10 @@ const RentAffordabilityCalculator = () => {
         },
         "primaryImageOfPage": {
           "@type": "ImageObject",
-          "url": "https://rent-affordability-calculator.rentwithclara.com/og-image.jpg"
+          "url": `${siteUrl}/og-image.jpg`
         },
         "breadcrumb": {
-          "@id": "https://rent-affordability-calculator.rentwithclara.com/#breadcrumb"
+          "@id": `${siteUrl}/#breadcrumb`
         },
         "speakable": {
           "@type": "SpeakableSpecification",
@@ -315,14 +318,14 @@ const RentAffordabilityCalculator = () => {
         <meta name="keywords" content="rent affordability, rent calculator, 30% rule, rental budget, how much rent can I afford, rent to income ratio" />
         <meta property="og:title" content="Rent Affordability Calculator - How Much Rent Can I Afford? | Rent with Clara" />
         <meta property="og:description" content="Calculate how much rent you can afford with our free calculator. Learn the 30% rule, budget strategies, and hidden costs to find your perfect rental." />
-        <meta property="og:image" content="https://rent-affordability-calculator.rentwithclara.com/og-image.jpg" />
-        <meta property="og:url" content="https://rent-affordability-calculator.rentwithclara.com/" />
+        <meta property="og:image" content={`${siteUrl}/og-image.jpg`} />
+        <meta property="og:url" content={`${siteUrl}/`} />
         <meta property="og:type" content="website" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Rent Affordability Calculator - How Much Rent Can I Afford? | Rent with Clara" />
         <meta name="twitter:description" content="Calculate how much rent you can afford with our free calculator. Learn the 30% rule, budget strategies, and hidden costs to find your perfect rental." />
-        <meta name="twitter:image" content="https://rent-affordability-calculator.rentwithclara.com/og-image.jpg" />
-        <link rel="canonical" href="https://rent-affordability-calculator.rentwithclara.com/" />
+        <meta name="twitter:image" content={`${siteUrl}/og-image.jpg`} />
+        <link rel="canonical" href={`${siteUrl}/`} />
         <script type="application/ld+json">
           {JSON.stringify(schemaData)}
         </script>

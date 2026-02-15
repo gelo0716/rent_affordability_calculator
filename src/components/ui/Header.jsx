@@ -3,10 +3,11 @@ import Icon from '../AppIcon';
 
 const Header = ({ className = '' }) => {
   const handleShare = async () => {
+    const siteUrl = import.meta.env.VITE_SITE_URL || window.location.origin;
     const shareData = {
       title: 'Rent Affordability Calculator | How Much Rent Can I Afford?',
       text: 'Find out how much rent you can afford with this simple calculator. Get your results in seconds!',
-      url: window?.location?.href || 'https://rent-affordability-calculator.rentwithclara.com/'
+      url: window?.location?.href || siteUrl
     };
 
     // Method 1: Try Web Share API (but skip canShare check as it can be unreliable)
